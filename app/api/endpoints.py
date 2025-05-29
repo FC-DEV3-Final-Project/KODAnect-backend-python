@@ -1,4 +1,4 @@
-from app.core.schema import QueryRequest, QueryResponse
+from app.config.schema import QueryRequest, QueryResponse
 from app.service.org_chart_service import search_org_chart
 from http import HTTPStatus
 from fastapi import APIRouter
