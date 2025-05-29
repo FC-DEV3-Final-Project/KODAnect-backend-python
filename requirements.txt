@@ -1,0 +1,22 @@
+# pip install -r requirements.txt
+
+python-dotenv
+pymysql
+
+langchain
+langchain-community
+langchain-core
+langchain-chroma
+langchain-upstage
+langchain-text-splitters
+langdetect
+
+sentence-transformers
+
+pydantic
+
+deepl
+gradio
+
+fastapi
+uvicorn
