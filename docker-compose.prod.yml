@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  fastapi:
+    image: docker.io/${DOCKER_USER}/kodanect-python:${IMAGE_TAG}
+    container_name: kodanect-python-prod
+    restart: always
+    env_file:
+      - .env
+    environment:
+      UPSTAGE_API_KEY: ${UPSTAGE_API_KEY}
+      ENV: prod
+    ports:
+      - "8000:8000"
+# 포트 없어서 network host x

@@ -1,0 +1,70 @@
+# === 운영체제 무시 항목 ===
+.DS_Store
+Thumbs.db
+
+# === IDE 설정 파일 ===
+# IntelliJ / PyCharm / VSCode
+.idea/
+.vscode/
+*.iml
+
+# === 가상환경 ===
+.venv/
+venv/
+env/
+
+# === 빌드 결과물 ===
+build/
+dist/
+__pycache__/
+*.py[cod]
+*.so
+
+# === 패키지 결과물 ===
+*.egg-info/
+*.egg
+*.whl
+
+# === 테스트 및 커버리지 ===
+.coverage
+htmlcov/
+coverage.xml
+pytest_cache/
+.tox/
+.cache
+tests/__pycache__/
+
+# === 로그 및 환경 설정 ===
+*.log
+logs/
+*.env
+.env.*
+.env.dev
+.env.prod
+
+# === 배포/도커 관련 ===
+*.pid
+*.db
+*.sqlite3
+chroma-data/
+__docker_build__/
+
+# === 마이그레이션 파일 ===
+migrations/
+alembic/
+
+# === 형상관리 또는 백업 잔재 ===
+*.tmp
+*.bak
+*.swp
+*.swo
+*.orig
+
+# === 기타 ===
+*.class
+*.sql~
+.ipynb_checkpoints/
+
+# === Git 관리 예외 ===
+KODAnect-backend-python.git/
+KODAnect-backend-python.git.bfg-report/

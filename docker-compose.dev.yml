@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  fastapi:
+    container_name: kodanect-python-dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      UPSTAGE_API_KEY: ${UPSTAGE_API_KEY}
+    networks:
+      - kodanect-backend-springboot_kodanect-net
+
+networks:
+  kodanect-backend-springboot_kodanect-net:
+    external: true
