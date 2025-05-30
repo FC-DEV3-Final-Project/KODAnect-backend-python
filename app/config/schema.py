@@ -11,10 +11,10 @@ class QueryResponse(BaseModel):
     success: bool
     code: int
     message: str
-    data: Optional[str] = None
+    data: Optional[dict] = None
 
     @classmethod
-    def success_response(cls, status: HTTPStatus, message: str, data: Optional[str] = None):
+    def success_response(cls, status: HTTPStatus, message: str, data: Optional[dict] = None):
         return cls(
             success=True,
             code=status.value,
@@ -23,7 +23,7 @@ class QueryResponse(BaseModel):
         )
 
     @classmethod
-    def fail_response(cls, status: HTTPStatus, message: str, data: Optional[str] = None):
+    def fail_response(cls, status: HTTPStatus, message: str, data: Optional[dict] = None):
         return cls(
             success=False,
             code=status.value,

@@ -3,9 +3,11 @@ from app.core.compressor import build_compressor
 from langchain.retrievers import ContextualCompressionRetriever
 
 
-def get_retriever():
+async def get_retriever():
+    vector_store = await load_vector_store()
+
     # 벡터 저장소를 통해 retriever 생성
-    retriever = load_vector_store().as_retriever(
+    retriever = vector_store.as_retriever(
         search_kwargs={"k": 5}
     )
 
