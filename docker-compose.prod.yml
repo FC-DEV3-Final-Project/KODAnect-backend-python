@@ -8,8 +8,11 @@ services:
     env_file:
       - .env
     environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
       UPSTAGE_API_KEY: ${UPSTAGE_API_KEY}
-      ENV: prod
     ports:
       - "8000:8000"
-# 포트 없어서 network host x
