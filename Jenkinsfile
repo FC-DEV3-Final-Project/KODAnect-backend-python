@@ -49,8 +49,11 @@ pipeline {
                         sh "docker build -t ${fullImage} ."
                         sh """
                             echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
-                            DOCKER_CLI_DEBUG=1 docker push ${fullImage}
+                            time DOCKER_CLI_DEBUG=1 docker push ${fullImage} | tee docker_push.log
                         """
+
+                        archiveArtifacts artifacts: 'docker_push.log', onlyIfSuccessful: false
+                        sh "docker image inspect ${fullImage} | jq '.[0].Size' || echo 'jq 없음, inspect 생략'"
                     }
 
                     if (currentBuild.currentResult == 'FAILURE') {
