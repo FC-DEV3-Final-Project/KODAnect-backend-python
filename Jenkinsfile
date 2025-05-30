@@ -44,11 +44,17 @@ pipeline {
                     githubNotify context: 'docker', status: 'PENDING', description: "도커 이미지 빌드 중... [${imageTag}]"
 
                     catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                        sh 'du -sh .'
+                        sh 'find . -type f | wc -l'
                         sh "docker build -t ${fullImage} ."
                         sh """
                             echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
+                            time DOCKER_CLI_DEBUG=1 docker push ${fullImage} | tee docker_push.log
                             docker push ${fullImage}
                         """
+
+                        archiveArtifacts artifacts: 'docker_push.log', onlyIfSuccessful: false
+                        sh "docker image inspect ${fullImage} | jq '.[0].Size' || echo 'jq 없음, inspect 생략'"
                     }
 
                     if (currentBuild.currentResult == 'FAILURE') {
