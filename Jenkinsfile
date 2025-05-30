@@ -76,6 +76,7 @@ pipeline {
                     githubNotify context: 'deploy', status: 'PENDING', description: '서버에 배포 중...'
 
                     withCredentials([
+                        string(credentialsId: 'upstage-api-key', variable: 'UPSTAGE_API_KEY'),
                         string(credentialsId: 'db-host', variable: 'DB_HOST'),
                         string(credentialsId: 'db-port', variable: 'DB_PORT'),
                         string(credentialsId: 'db-name', variable: 'DB_NAME'),
