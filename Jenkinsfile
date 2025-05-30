@@ -47,7 +47,7 @@ pipeline {
                         sh "docker build -t ${fullImage} ."
                         sh """
                             echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
-                            docker push ${fullImage}
+                            DOCKER_CLI_DEBUG=1 docker push ${fullImage}
                         """
                     }
 
