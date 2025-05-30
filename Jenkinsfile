@@ -6,7 +6,7 @@ pipeline {
         DOCKER_PASS = credentials('docker-pass')
         SERVER_HOST = credentials('server-host')
         SLACK_TOKEN = credentials('slack-token')
-        IMAGE_NAME = 'kodanect-python'
+        IMAGE_NAME = 'kodanect'
 
         CI_FAILED = 'false'
         CD_FAILED = 'false'
@@ -38,7 +38,7 @@ pipeline {
             }
             steps {
                 script {
-                    imageTag = "build-${new Date().format('yyyyMMdd-HHmm')}"
+                    imageTag = "build-python-${new Date().format('yyyyMMdd-HHmm')}"
                     fullImage = "docker.io/${env.DOCKER_USER}/${env.IMAGE_NAME}:${imageTag}"
 
                     githubNotify context: 'docker', status: 'PENDING', description: "도커 이미지 빌드 중... [${imageTag}]"
