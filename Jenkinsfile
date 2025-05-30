@@ -50,7 +50,6 @@ pipeline {
                         sh """
                             echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
                             time DOCKER_CLI_DEBUG=1 docker push ${fullImage} | tee docker_push.log
-                            docker push ${fullImage}
                         """
 
                         archiveArtifacts artifacts: 'docker_push.log', onlyIfSuccessful: false
