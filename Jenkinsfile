@@ -44,18 +44,13 @@ pipeline {
                     githubNotify context: 'docker', status: 'PENDING', description: "도커 이미지 빌드 중... [${imageTag}]"
 
                     catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                        echo "================== [1/4] Docker Context 점검 =================="
-                        sh "echo '[용량]' && du -sh ."
-                        sh "echo '[파일 수]' && find . -type f | wc -l"
-
-                        echo "================== [2/4] Docker 이미지 빌드 ==================="
+                        sh 'du -sh .'
+                        sh 'find . -type f | wc -l'
                         sh "docker build -t ${fullImage} ."
-
-                        echo "================== [3/4] Docker Hub 로그인 ==================="
-                        sh "echo '\$DOCKER_PASS' | docker login -u '\$DOCKER_USER' --password-stdin"
-
-                        echo "================== [4/4] Docker 이미지 푸시 ==================="
-                        sh "DOCKER_CLI_DEBUG=1 docker push ${fullImage}"
+                        sh """
+                            echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
+                            DOCKER_CLI_DEBUG=1 docker push ${fullImage}
+                        """
                     }
 
                     if (currentBuild.currentResult == 'FAILURE') {
