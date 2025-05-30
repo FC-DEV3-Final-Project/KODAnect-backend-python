@@ -6,7 +6,7 @@ pipeline {
         DOCKER_PASS = credentials('docker-pass')
         SERVER_HOST = credentials('server-host')
         SLACK_TOKEN = credentials('slack-token')
-        IMAGE_NAME = 'kodanect'
+        IMAGE_NAME = 'kodanect-python'
 
         CI_FAILED = 'false'
         CD_FAILED = 'false'
@@ -44,21 +44,18 @@ pipeline {
                     githubNotify context: 'docker', status: 'PENDING', description: "도커 이미지 빌드 중... [${imageTag}]"
 
                     catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                        echo "[1/3] Docker 이미지 빌드 시작"
+                        echo "================== [1/4] Docker Context 점검 =================="
+                        sh "echo '[용량]' && du -sh ."
+                        sh "echo '[파일 수]' && find . -type f | wc -l"
+
+                        echo "================== [2/4] Docker 이미지 빌드 ==================="
                         sh "docker build -t ${fullImage} ."
 
-                        echo "[2/3] Docker Hub 로그인"
-                        sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin"
+                        echo "================== [3/4] Docker Hub 로그인 ==================="
+                        sh "echo '\$DOCKER_PASS' | docker login -u '\$DOCKER_USER' --password-stdin"
 
-                        echo "[3/3] Docker 이미지 푸시 시작"
-
-                        retry(2) {
-                            timeout(time: 5, unit: 'MINUTES') {
-                                sh "DOCKER_CLI_DEBUG=1 docker push ${fullImage}"
-                            }
-                        }
-
-                        echo "Docker 푸시 완료"
+                        echo "================== [4/4] Docker 이미지 푸시 ==================="
+                        sh "DOCKER_CLI_DEBUG=1 docker push ${fullImage}"
                     }
 
                     if (currentBuild.currentResult == 'FAILURE') {
