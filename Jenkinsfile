@@ -71,12 +71,22 @@ pipeline {
                     githubNotify context: 'deploy', status: 'PENDING', description: '서버에 배포 중...'
 
                     withCredentials([
-                        string(credentialsId: 'upstage-api-key', variable: 'UPSTAGE_API_KEY'),
+                        string(credentialsId: 'db-host', variable: 'DB_HOST'),
+                        string(credentialsId: 'db-port', variable: 'DB_PORT'),
+                        string(credentialsId: 'db-name', variable: 'DB_NAME'),
+                        string(credentialsId: 'db-username', variable: 'DB_USERNAME'),
+                        string(credentialsId: 'db-password', variable: 'DB_PASSWORD'),
+                        string(credentialsId: 'github-token-string', variable: 'GITHUB_TOKEN'),
                         usernamePassword(credentialsId: 'server-ssh-login', usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASS')
                     ]) {
                         sh """
                             cat > .env <<'EOF'
 UPSTAGE_API_KEY=${UPSTAGE_API_KEY}
+DB_HOST=${DB_HOST}
+DB_PORT=${DB_PORT}
+DB_NAME=${DB_NAME}
+DB_USERNAME=${DB_USERNAME}
+DB_PASSWORD=${DB_PASSWORD}
 DOCKER_USER=${DOCKER_USER}
 IMAGE_TAG=${imageTag}
 EOF
@@ -105,6 +115,14 @@ EOF
                         """
 
                         githubNotify context: 'deploy', status: 'SUCCESS', description: "배포 완료 [${imageTag}]"
+
+                        sh """
+                            export GITHUB_TOKEN=${GITHUB_TOKEN}
+                            gh release create ${imageTag} \\
+                              --repo FC-DEV3-Final-Project/KODAnect-backend-python \\
+                              --title "Release ${imageTag}" \\
+                              --notes "이미지: ${fullImage}"
+                        """
                     }
 
                     if (currentBuild.currentResult == 'FAILURE') {
@@ -150,38 +168,46 @@ EOF
     }
 
     post {
-        always {
+        success {
             script {
-                if (env.CI_FAILED == 'true') {
-                    githubNotify context: 'ci/kodanect-fastapi', status: 'FAILURE', description: 'CI 실패'
-                } else {
-                    githubNotify context: 'ci/kodanect-fastapi', status: 'SUCCESS', description: 'CI 성공'
-                }
-
-                if (env.CD_FAILED == 'true') {
-                    githubNotify context: 'cd/kodanect-fastapi', status: 'FAILURE', description: 'CD 실패'
-                } else {
-                    githubNotify context: 'cd/kodanect-fastapi', status: 'SUCCESS', description: 'CD 성공'
+                if (env.CHANGE_ID != null || env.BRANCH_NAME?.trim() == 'main') {
+                    slackSend(
+                        channel: '4_파이널프로젝트_1조_jenkins',
+                        color: 'good',
+                        token: env.SLACK_TOKEN,
+                        message: "빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|바로가기>)"
+                    )
+                    if (env.BRANCH_NAME == 'main') {
+                        slackSend(
+                            channel: '4_파이널프로젝트_1조_jenkins',
+                            color: 'good',
+                            token: env.SLACK_TOKEN,
+                            message: "배포 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|바로가기>)"
+                        )
+                    }
                 }
             }
         }
 
-        success {
-            slackSend(
-                channel: '4_파이널프로젝트_1조_jenkins',
-                color: 'good',
-                token: env.SLACK_TOKEN,
-                message: "✅ FastAPI 배포 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|바로가기>)"
-            )
-        }
-
         failure {
-            slackSend(
-                channel: '4_파이널프로젝트_1조_jenkins',
-                color: 'danger',
-                token: env.SLACK_TOKEN,
-                message: "❌ FastAPI 배포 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|바로가기>)"
-            )
+            script {
+                if (env.CHANGE_ID !=null || env.BRANCH_NAME?.trim() == 'main') {
+                    slackSend(
+                        channel: '4_파이널프로젝트_1조_jenkins',
+                        color: 'danger',
+                        token: env.SLACK_TOKEN,
+                        message: "빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|바로가기>)"
+                    )
+                    if (env.BRANCH_NAME == 'main') {
+                        slackSend(
+                            channel: '4_파이널프로젝트_1조_jenkins',
+                            color: 'danger',
+                            token: env.SLACK_TOKEN,
+                            message: "배포 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|바로가기>)"
+                        )
+                    }
+                }
+            }
         }
     }
 }
