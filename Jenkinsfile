@@ -88,6 +88,7 @@ DB_NAME=${DB_NAME}
 DB_USERNAME=${DB_USERNAME}
 DB_PASSWORD=${DB_PASSWORD}
 DOCKER_USER=${DOCKER_USER}
+DOCKER_PASS=${DOCKER_PASS}
 IMAGE_TAG=${imageTag}
 EOF
 
@@ -109,6 +110,8 @@ EOF
                             sshpass -p "\$SSH_PASS" ssh -o StrictHostKeyChecking=no \$SSH_USER@${SERVER_HOST} '
                                 set -e
                                 cd /root/docker-compose-python-prod
+                                set -a && . .env && set +a
+
                                 echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
                                 docker-compose -f docker-compose.prod.yml pull
                                 docker-compose -f docker-compose.prod.yml up -d
