@@ -1,0 +1,14 @@
+python-dotenv==1.1.0
+aiomysql==0.2.0
+
+uvicorn==0.34.2
+gunicorn==23.0.0
+pydantic==2.11.5
+
+langchain==0.3.25
+langchain-chroma==0.2.4
+langchain-upstage==0.6.0
+
+sentence-transformers==4.1.0
+torch==2.2.2+cpu
+-f https://download.pytorch.org/whl/torch_stable.html

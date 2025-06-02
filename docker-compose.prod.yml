@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  fastapi:
+    image: docker.io/${DOCKER_USER}/kodanect:${IMAGE_TAG}
+    container_name: kodanect-python-prod
+    restart: always
+    env_file:
+      - .env
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      UPSTAGE_API_KEY: ${UPSTAGE_API_KEY}
+    ports:
+      - "8000:8000"
