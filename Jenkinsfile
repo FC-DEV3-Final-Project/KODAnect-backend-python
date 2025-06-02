@@ -80,7 +80,7 @@ pipeline {
                         usernamePassword(credentialsId: 'server-ssh-login', usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASS')
                     ]) {
                         sh """
-                            cat > .env <<'EOF'
+                            cat > .env <<EOF
 UPSTAGE_API_KEY=${UPSTAGE_API_KEY}
 DB_HOST=${DB_HOST}
 DB_PORT=${DB_PORT}
@@ -91,24 +91,28 @@ DOCKER_USER=${DOCKER_USER}
 IMAGE_TAG=${imageTag}
 EOF
 
-                            sshpass -p "\$SSH_PASS" ssh -o StrictHostKeyChecking=no \$SSH_USER@${SERVER_HOST} 'mkdir -p /root/docker-compose-python-prod'
-
-                            sshpass -p "\$SSH_PASS" scp -o StrictHostKeyChecking=no .env \$SSH_USER@${SERVER_HOST}:/root/docker-compose-python-prod/.env
-
                             sshpass -p "\$SSH_PASS" ssh -o StrictHostKeyChecking=no \$SSH_USER@${SERVER_HOST} '
-                                echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
+                                set -e
+                                
+                                mkdir -p /root/docker-compose-python-prod
 
-                                if [ ! -d /root/docker-compose-python-prod ]; then
+                                if [ ! -d /root/docker-compose-python-prod/.git ]; then
+                                    rm -rf /root/docker-compose-python-prod
                                     git clone https://github.com/FC-DEV3-Final-Project/KODAnect-backend-python.git /root/docker-compose-python-prod
                                 else
                                     cd /root/docker-compose-python-prod && git pull
                                 fi
+                            '
 
-                                cd /root/docker-compose-python-prod &&
-                                docker-compose -f docker-compose.prod.yml pull &&
+                            sshpass -p "\$SSH_PASS" scp -o StrictHostKeyChecking=no .env \$SSH_USER@${SERVER_HOST}:/root/docker-compose-python-prod/.env
+
+                            sshpass -p "\$SSH_PASS" ssh -o StrictHostKeyChecking=no \$SSH_USER@${SERVER_HOST} '
+                                set -e
+                                cd /root/docker-compose-python-prod
+                                echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
+                                docker-compose -f docker-compose.prod.yml pull
                                 docker-compose -f docker-compose.prod.yml up -d
-
-                                rm -f /root/docker-compose-python-prod/.env
+                                rm -f .env
                             '
 
                             rm -f .env
