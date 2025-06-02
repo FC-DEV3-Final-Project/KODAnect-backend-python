@@ -101,7 +101,7 @@ EOF
                                     rm -rf /root/docker-compose-python-prod
                                     git clone https://github.com/FC-DEV3-Final-Project/KODAnect-backend-python.git /root/docker-compose-python-prod
                                 else
-                                    cd /root/docker-compose-python-prod && git pull
+                                    cd /root/docker-compose-python-prod && git pull --no-rebase
                                 fi
                             '
 
