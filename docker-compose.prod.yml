@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   fastapi:
-    image: docker.io/${DOCKER_USER}/kodanect-python:${IMAGE_TAG}
+    image: docker.io/${DOCKER_USER}/kodanect:${IMAGE_TAG}
     container_name: kodanect-python-prod
     restart: always
     env_file:
