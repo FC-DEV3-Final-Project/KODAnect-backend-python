@@ -20,7 +20,6 @@ pipeline {
                     catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                         checkout scm
                     }
-
                     if (currentBuild.currentResult == 'FAILURE') {
                         githubNotify context: 'checkout', status: 'FAILURE', description: '체크아웃 실패'
                         env.CI_FAILED = 'true'
@@ -92,24 +91,24 @@ DOCKER_USER=${DOCKER_USER}
 IMAGE_TAG=${imageTag}
 EOF
 
-                            sshpass -p "\$SSH_PASS" ssh -o StrictHostKeyChecking=no \$SSH_USER@${SERVER_HOST} 'mkdir -p /root/docker-compose-prod'
+                            sshpass -p "\$SSH_PASS" ssh -o StrictHostKeyChecking=no \$SSH_USER@${SERVER_HOST} 'mkdir -p /root/docker-compose-python-prod'
 
-                            sshpass -p "\$SSH_PASS" scp -o StrictHostKeyChecking=no .env \$SSH_USER@${SERVER_HOST}:/root/docker-compose-prod/.env
+                            sshpass -p "\$SSH_PASS" scp -o StrictHostKeyChecking=no .env \$SSH_USER@${SERVER_HOST}:/root/docker-compose-python-prod/.env
 
                             sshpass -p "\$SSH_PASS" ssh -o StrictHostKeyChecking=no \$SSH_USER@${SERVER_HOST} '
                                 echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
 
-                                if [ ! -d /root/docker-compose-prod ]; then
-                                    git clone https://github.com/FC-DEV3-Final-Project/KODAnect-backend-python.git /root/docker-compose-prod
+                                if [ ! -d /root/docker-compose-python-prod ]; then
+                                    git clone https://github.com/FC-DEV3-Final-Project/KODAnect-backend-python.git /root/docker-compose-python-prod
                                 else
-                                    cd /root/docker-compose-prod && git pull
+                                    cd /root/docker-compose-python-prod && git pull
                                 fi
 
-                                cd /root/docker-compose-prod &&
+                                cd /root/docker-compose-python-prod &&
                                 docker-compose -f docker-compose.prod.yml pull &&
                                 docker-compose -f docker-compose.prod.yml up -d
 
-                                rm -f /root/docker-compose-prod/.env
+                                rm -f /root/docker-compose-python-prod/.env
                             '
 
                             rm -f .env
@@ -143,7 +142,7 @@ EOF
                 script {
                     githubNotify context: 'healthcheck', status: 'PENDING', description: '헬스체크 중...'
 
-                    def healthCheckUrl = "http://10.8.110.14:8000/health"
+                    def healthCheckUrl = "http://${SERVER_HOST}:8000/health"
                     def retries = 3
                     def success = false
 
