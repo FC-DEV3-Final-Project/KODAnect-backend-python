@@ -2,8 +2,6 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_USER = credentials('docker-user')
-        DOCKER_PASS = credentials('docker-pass')
         SERVER_HOST = credentials('server-host')
         SLACK_TOKEN = credentials('slack-token')
         IMAGE_NAME = 'kodanect'
@@ -20,7 +18,6 @@ pipeline {
                     catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                         checkout scm
                     }
-
                     if (currentBuild.currentResult == 'FAILURE') {
                         githubNotify context: 'checkout', status: 'FAILURE', description: '체크아웃 실패'
                         env.CI_FAILED = 'true'
@@ -38,30 +35,39 @@ pipeline {
             }
             steps {
                 script {
-                    imageTag = "build-python-${new Date().format('yyyyMMdd-HHmm')}"
-                    fullImage = "docker.io/${env.DOCKER_USER}/${env.IMAGE_NAME}:${imageTag}"
+                    def imageTag = "build-python-${new Date().format('yyyyMMdd-HHmm')}"
+                    def fullImage
 
-                    githubNotify context: 'docker', status: 'PENDING', description: "도커 이미지 빌드 중... [${imageTag}]"
+                    withCredentials([usernamePassword(credentialsId: 'docker-user', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        fullImage = "docker.io/${DOCKER_USER}/${env.IMAGE_NAME}:${imageTag}"
 
-                    catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                        sh 'du -sh .'
-                        sh 'find . -type f | wc -l'
-                        sh "docker build -t ${fullImage} ."
-                        sh """
-                        echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
-                        DOCKER_CLI_DEBUG=1 docker push ${fullImage} | tee docker_push.log
-                        """
+                        env.DOCKER_USER = DOCKER_USER
+                        env.DOCKER_PASS = DOCKER_PASS
 
-                        archiveArtifacts artifacts: 'docker_push.log', onlyIfSuccessful: false
-                        sh "docker image inspect ${fullImage} | jq '.[0].Size' || echo 'jq 없음, inspect 생략'"
-                    }
+                        githubNotify context: 'docker', status: 'PENDING', description: "도커 이미지 빌드 중... [${imageTag}]"
 
-                    if (currentBuild.currentResult == 'FAILURE') {
-                        githubNotify context: 'docker', status: 'FAILURE', description: '도커 푸시 실패'
-                        env.CD_FAILED = 'true'
-                        error('Docker Build & Push 실패')
-                    } else {
-                        githubNotify context: 'docker', status: 'SUCCESS', description: "도커 이미지 푸시 완료 [${imageTag}]"
+                        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                            sh 'du -sh .'
+                            sh 'find . -type f | wc -l'
+                            sh "docker build -t ${fullImage} ."
+                            sh """
+                                echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
+                                DOCKER_CLI_DEBUG=1 docker push ${fullImage} | tee docker_push.log
+                            """
+                            archiveArtifacts artifacts: 'docker_push.log', onlyIfSuccessful: false
+                            sh "docker image inspect ${fullImage} | jq '.[0].Size' || echo 'jq 없음, inspect 생략'"
+                        }
+
+                        if (currentBuild.currentResult == 'FAILURE') {
+                            githubNotify context: 'docker', status: 'FAILURE', description: '도커 푸시 실패'
+                            env.CD_FAILED = 'true'
+                            error('Docker Build & Push 실패')
+                        } else {
+                            githubNotify context: 'docker', status: 'SUCCESS', description: "도커 이미지 푸시 완료 [${imageTag}]"
+                        }
+
+                        env.IMAGE_TAG = imageTag
+                        env.FULL_IMAGE = fullImage
                     }
                 }
             }
@@ -83,6 +89,7 @@ pipeline {
                         string(credentialsId: 'db-username', variable: 'DB_USERNAME'),
                         string(credentialsId: 'db-password', variable: 'DB_PASSWORD'),
                         string(credentialsId: 'github-token-string', variable: 'GITHUB_TOKEN'),
+                        usernamePassword(credentialsId: 'docker-user', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS'),
                         usernamePassword(credentialsId: 'server-ssh-login', usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASS')
                     ]) {
                         sh """
@@ -94,14 +101,14 @@ DB_NAME=${DB_NAME}
 DB_USERNAME=${DB_USERNAME}
 DB_PASSWORD=${DB_PASSWORD}
 DOCKER_USER=${DOCKER_USER}
-IMAGE_TAG=${imageTag}
+IMAGE_TAG=${IMAGE_TAG}
 EOF
 
-                            sshpass -p "\$SSH_PASS" ssh -o StrictHostKeyChecking=no \$SSH_USER@\${SERVER_HOST} 'mkdir -p /root/docker-compose-prod'
+                            sshpass -p "\$SSH_PASS" ssh -o StrictHostKeyChecking=no \$SSH_USER@${SERVER_HOST} 'mkdir -p /root/docker-compose-prod'
 
-                            sshpass -p "\$SSH_PASS" scp -o StrictHostKeyChecking=no .env \$SSH_USER@\${SERVER_HOST}:/root/docker-compose-prod/.env
+                            sshpass -p "\$SSH_PASS" scp -o StrictHostKeyChecking=no .env \$SSH_USER@${SERVER_HOST}:/root/docker-compose-prod/.env
 
-                            sshpass -p "\$SSH_PASS" ssh -o StrictHostKeyChecking=no \$SSH_USER@\${SERVER_HOST} '
+                            sshpass -p "\$SSH_PASS" ssh -o StrictHostKeyChecking=no \$SSH_USER@${SERVER_HOST} '
                                 echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
 
                                 if [ ! -d /root/docker-compose-prod ]; then
@@ -120,14 +127,14 @@ EOF
                             rm -f .env
                         """
 
-                        githubNotify context: 'deploy', status: 'SUCCESS', description: "배포 완료 [${imageTag}]"
+                        githubNotify context: 'deploy', status: 'SUCCESS', description: "배포 완료 [${IMAGE_TAG}]"
 
                         sh """
                             export GITHUB_TOKEN=${GITHUB_TOKEN}
-                            gh release create ${imageTag} \\
+                            gh release create ${IMAGE_TAG} \\
                               --repo FC-DEV3-Final-Project/KODAnect-backend-python \\
-                              --title "Release ${imageTag}" \\
-                              --notes "이미지: ${fullImage}"
+                              --title "Release ${IMAGE_TAG}" \\
+                              --notes "이미지: ${FULL_IMAGE}"
                         """
                     }
 
@@ -149,9 +156,9 @@ EOF
                     githubNotify context: 'healthcheck', status: 'PENDING', description: '헬스체크 중...'
 
                     def healthCheckUrl = "http://10.8.110.14:8000/health"
-
                     def retries = 3
                     def success = false
+
                     for (int i = 0; i < retries; i++) {
                         def response = sh(script: "curl -s -o /dev/null -w '%{http_code}' ${healthCheckUrl}", returnStdout: true).trim()
                         if (response == '200') {
@@ -197,7 +204,7 @@ EOF
 
         failure {
             script {
-                if (env.CHANGE_ID !=null || env.BRANCH_NAME?.trim() == 'main') {
+                if (env.CHANGE_ID != null || env.BRANCH_NAME?.trim() == 'main') {
                     slackSend(
                         channel: '4_파이널프로젝트_1조_jenkins',
                         color: 'danger',
