@@ -8,7 +8,7 @@ async def get_retriever():
 
     # 벡터 저장소를 통해 retriever 생성
     retriever = vector_store.as_retriever(
-        search_kwargs={"k": 5}
+        search_kwargs={"k": 3}
     )
 
     return ContextualCompressionRetriever(
