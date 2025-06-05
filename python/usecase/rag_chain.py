@@ -6,6 +6,9 @@ from langchain_core.runnables import RunnableLambda
 
 llm = get_llm()
 
+# ==============================
+# 부서 검색 체인 생성 함수
+# ==============================
 async def get_org_chart_chain():
     retriever = await get_retriever()
 
@@ -21,6 +24,9 @@ async def get_org_chart_chain():
 
     return RunnableLambda(format_docs) | prompt_template | llm | JsonOutputParser()
 
+# ==================================
+# 사용자 질의 유효성 검사 체인 생성 함수
+# ==================================
 def get_query_validation_chain():
     prompt_template = get_query_validation_prompt()
 

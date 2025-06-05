@@ -1,6 +1,8 @@
 from langchain_core.prompts import ChatPromptTemplate
 
-
+# ==============================
+# 부서 검색 프롬프트 생성 함수
+# ==============================
 def get_org_chart_prompt():
     org_chart_prompt = ChatPromptTemplate.from_template(
         """
@@ -27,6 +29,9 @@ def get_org_chart_prompt():
 
     return org_chart_prompt
 
+# =====================================
+# 사용자 질의 유효성 검사 프롬프트 생성 함수
+# =====================================
 def get_query_validation_prompt():
     query_validation_prompt = ChatPromptTemplate.from_template(
         """

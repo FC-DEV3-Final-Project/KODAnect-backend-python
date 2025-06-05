@@ -1,39 +1,40 @@
+import asyncio
 from http import HTTPStatus
-from datetime import datetime
+from python.core.util import get_current_time
 from python.usecase.rag_chain import get_query_validation_chain, get_org_chart_chain
-from python.application.schema.api_schema import APIRequest, APIResponse
+from python.application.schema.api_schema import APIResponse
 
+# ==============================
+# LangChain 실행 및 응답 생성 함수
+# ==============================
+async def search_org_chart(query: str):
+    now = get_current_time()
 
-async def search_org_chart(query: str) -> dict:
+    # 사용자 질의 유효성 검사 체인 호출
     query_validation_chain = get_query_validation_chain()
-    query_validation_response = await query_validation_chain.ainvoke(query)
+    # 부서 검색 체인 호출
+    org_chart_chain = await get_org_chart_chain()
 
-    # 현재 시간 조회
-    time = get_current_time()
+    # 두 체인 병렬 실행하여 답변 동시 생성
+    query_validation_response, org_chart_response = await asyncio.gather(
+        query_validation_chain.ainvoke(query),
+        org_chart_chain.ainvoke(query)
+    )
 
+    # 질의 유효한 경우
     if query_validation_response["is_valid"]:
-        org_chart_chain = await get_org_chart_chain()
-        org_chart_response = await org_chart_chain.ainvoke(query)
-
         message = format_message(org_chart_response)
 
-        return APIResponse.success_response(HTTPStatus.OK, "챗봇 응답 성공", {"message": message, "time": time})
+        return APIResponse.success_response(HTTPStatus.OK, "챗봇 응답 성공", {"message": message, "time": now})
+    # 질의 유효하지 않은 경우
     else:
-        return APIResponse.success_response(HTTPStatus.OK, "질문 유효성 필터링", {"message": query_validation_response['reason'], "time": time})
+        return APIResponse.success_response(HTTPStatus.OK, "질문 유효성 필터링", {"message": query_validation_response['reason'], "time": now})
 
-
-# 관련 부서 조회 여부 확인 후 챗봇 메시지 포맷팅
+# ==============================
+# 챗봇 메시지 포맷팅 함수
+# ==============================
 def format_message(response: dict):
     if response["is_exist"]:
         return f"부서: {response['dept']}, 전화번호: {response['tel_no']}"
     else:
         return response["message"]
-
-
-# 현재 시간 출력 및 포맷팅(ex. 오후 04:17)
-def get_current_time():
-    now = datetime.now()
-    period = "오전" if now.hour < 12 else "오후"  # 오전/오후
-    hour_12 = now.hour % 12 if now.hour != 0 else 12  # 12시간제로 변경
-
-    return f"{period} {hour_12:02d}:{now.minute:02d}"

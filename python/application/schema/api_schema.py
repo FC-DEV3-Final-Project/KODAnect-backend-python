@@ -2,16 +2,20 @@ from http import HTTPStatus
 from typing import Optional
 from pydantic import BaseModel
 
-# 요청
+# ==============================
+# API 요청 스키마
+# ==============================
 class APIRequest(BaseModel):
     query: str
 
-# 응답
+# ==============================
+# API 응답 스키마
+# ==============================
 class APIResponse(BaseModel):
-    success: bool
-    code: int
-    message: str
-    data: Optional[dict] = None
+    success: bool               # 성공 여부
+    code: int                   # 상태 코드
+    message: str                # 상태 메시지
+    data: Optional[dict] = None # 전달값
 
     @classmethod
     def success_response(cls, status: HTTPStatus, message: str, data: Optional[dict] = None):

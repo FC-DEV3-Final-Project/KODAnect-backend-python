@@ -1,7 +1,9 @@
 import aiomysql
-from python.config.setting import setting
+from python.core.setting import setting
 
-
+# ==============================
+# MySQL Connection 생성 함수
+# ==============================
 async def get_connection():
     return await aiomysql.connect(
         host=setting.DB_HOST,
