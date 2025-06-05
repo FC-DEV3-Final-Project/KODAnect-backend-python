@@ -1,5 +1,5 @@
-from app.data.database import get_connection
 import aiomysql
+from python.infrastructure.database import get_connection
 from langchain.schema import Document
 
 

@@ -1,13 +1,13 @@
-from pydantic import BaseModel
-from typing import Optional
 from http import HTTPStatus
+from typing import Optional
+from pydantic import BaseModel
 
 # 요청
-class QueryRequest(BaseModel):
+class APIRequest(BaseModel):
     query: str
 
 # 응답
-class QueryResponse(BaseModel):
+class APIResponse(BaseModel):
     success: bool
     code: int
     message: str
@@ -30,8 +30,3 @@ class QueryResponse(BaseModel):
             message=message,
             data=data
         )
-
-# 질문 품질 필터링
-class QueryValidity(BaseModel):
-    is_valid: bool
-    reason: str

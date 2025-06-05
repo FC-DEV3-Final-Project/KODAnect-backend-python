@@ -1,4 +1,4 @@
-from app.core.document_loader import load_org_documents
+from python.infrastructure.document_loader import load_org_documents
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 
