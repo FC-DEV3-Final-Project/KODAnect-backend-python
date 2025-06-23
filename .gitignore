@@ -19,6 +19,8 @@ dist/
 __pycache__/
 *.py[cod]
 *.so
+*.pyo
+*.pyd
 
 # === 패키지 결과물 ===
 *.egg-info/
@@ -68,3 +70,6 @@ alembic/
 # === Git 관리 예외 ===
 KODAnect-backend-python.git/
 KODAnect-backend-python.git.bfg-report/
+
+# === 벡터 저장소 ===
+storage/
